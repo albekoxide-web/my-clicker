@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Crypto King Clicker</title>
+    <script src="https://telegram.org"></script>
+    <script src="https://jsdelivr.net"></script>
+    <style>
+        :root { --blue: #0088cc; --bg: #0a0a0a; --gold: #ffd700; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; text-align: center; margin: 0; overflow: hidden; user-select: none; touch-action: manipulation; }
+        
+        .page { padding: 20px; padding-bottom: 110px; display: none; height: 90vh; overflow-y: auto; animation: fadeIn 0.4s ease; }
+        #game-page { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Панель прогресу */
+        .stats-panel { background: #161616; padding: 15px; border-radius: 20px; margin-bottom: 20px; border: 1px solid #222; }
+        .progress-container { background: #333; height: 8px; border-radius: 4px; margin: 10px 0; overflow: hidden; }
+        .progress-bar { background: var(--blue); height: 100%; width: 0%; border-radius: 4px; transition: width 0.5s ease; }
+        
+        /* Монета */
+        .main-coin { width: 180px; height: 180px; background: radial-gradient(circle, #1a1a1a, #000); border: 4px solid var(--blue); border-radius: 50%; margin: 20px auto; display: flex; align-items: center; justify-content: center; font-size: 70px; cursor: pointer; position: relative; box-shadow: 0 0 30px rgba(0,136,204,0.2); }
+        .main-coin:active { transform: scale(0.95); }
+
+        /* Картки */
+        .card { width: 100px; background: #fff; border-radius: 12px; display: inline-block; margin: 5px; color: #000; position: relative; vertical-align: top; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .card-top { height: 25px; border-radius: 12px 12px 0 0; color: white; font-size: 9px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        .card-emoji { font-size: 35px; padding: 10px 0; }
+        .card-count { position: absolute; top: 2px; right: 5px; font-size: 10px; font-weight: bold; background: rgba(0,0,0,0.1); padding: 0 3px; border-radius: 3px; }
+
+        /* Навігація */
+        .nav { display: flex; justify-content: space-around; background: #111; position: fixed; bottom: 0; width: 100%; padding: 15px 0; border-top: 1px solid #222; z-index: 1000; }
+        .nav-item { color: #555; font-size: 11px; cursor: pointer; transition: 0.2s; }
+        .nav-item.active { color: var(--blue); font-weight: bold; transform: scale(1.1); }
+
+        button { background: var(--blue); color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        button:disabled { background: #333; color: #777; }
+
+        /* Анти-чит та ефекти */
+        .float { position: fixed; pointer-events: none; animation: floatUp 0.8s forwards; font-weight: bold; color: var(--blue); font-size: 24px; z-index: 500; }
+        @keyframes floatUp { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-100px); } }
+        
+        .market-row { background: #161616; margin: 10px; padding: 12px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; }
+    </style>
+</head>
+<body>
+
+<div id="game-page" class="page">
+    <div class="stats-panel">
+        <div>Рівень: <span id="lvl">1</span> / 10</div>
+        <div class="progress-container"><div id="bar" class="progress-bar"></div></div>
+        <div style="font-size: 12px;">Клік: +<span id="click-val">1</span> | Авто: +<span id="auto-val">0</span>/сек</div>
+        <button id="up-btn" onclick="buyLvl()" style="margin-top:10px">Апгрейд: <span id="cost">100</span> 🪙</button>
+    </div>
+    
+    <h1 style="font-size: 45px; margin: 10px 0;"><span id="bal">0</span> 🪙</h1>
+    <div class="main-coin" id="coin-btn">💎</div>
+</div>
+
+<div id="cards-page" class="page">
+    <h2>Твій Інвентар</h2>
+    <div id="inv-list">Порожньо...</div>
+</div>
+
+<div id="market-page" class="page">
+    <h2>Глобальний Ринок</h2>
+    <div id="mkt-list">Завантаження товарів...</div>
+</div>
+
+<div id="shop-page" class="page">
+    <h2>Магазин Кейсів</h2>
+    <div style="background: #161616; padding: 30px; border-radius: 25px; border: 2px dashed var(--blue);">
+        <div style="font-size: 60px;">🎁</div>
+        <button onclick="openCase()" style="padding: 15px 30px; font-size: 18px;">Відкрити (100 🪙)</button>
+        <p style="font-size: 10px; color: #555; margin-top: 15px;">Серце Життя: 0.5% (Тільки 3 в світі!)</p>
+    </div>
+</div>
+
+<div class="nav">
+    <div class="nav-item active" onclick="tab('game-page', this)">🏠 Гра</div>
+    <div class="nav-item" onclick="tab('cards-page', this)">🎒 Картки</div>
+    <div class="nav-item" onclick="tab('market-page', this)">🛒 Маркет</div>
+    <div class="nav-item" onclick="tab('shop-page', this)">🎲 Магазин</div>
+</div>
+
+<script>
+    // === КОНФІГУРАЦІЯ ===
+    const URL = 'https://cpxgsklvgzxplqidqtzx.supabase.co/rest/v1/';
+    const KEY = 'sb_publishable_2Diasnju3zsuDNJa-iLk4Q__Wz9qVcS';
+    const supabase = supabase.createClient(https://cpxgsklvgzxplqidqtzx.supabase.co/rest/v1/, sb_publishable_2Diasnju3zsuDNJa-iLk4Q__Wz9qVcS);
+
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+    const user = tg.initDataUnsafe?.user?.username || "Гравець_" + Math.floor(Math.random()*999);
+
+    let coins = parseFloat(localStorage.getItem('coins')) || 0;
+    let level = parseInt(localStorage.getItem('level')) || 1;
+    let inventory = JSON.parse(localStorage.getItem('inventory')) || {};
+    
+    const upCosts = [0, 100, 500, 1500, 5000, 15000, 50000, 150000, 500000, 1500000, 5000000];
+    const items = [
+        { name: "Бонус", chance: 10, type: 'bonus' },
+        { name: "Нищий", chance: 20, color: "#8B4513", emoji: "🧔" },
+        { name: "Гоблін", chance: 10, color: "#228B22", emoji: "👺" },
+        { name: "Дворф", chance: 9, color: "#708090", emoji: "⛏️" },
+        { name: "Лицар", chance: 6, color: "#4169E1", emoji: "🛡️" },
+        { name: "Маг Світла", chance: 5, color: "#00FFFF", emoji: "🪄" },
+        { name: "Король", chance: 4.5, color: "#FFD700", emoji: "👑" },
+        { name: "Дракон", chance: 2, color: "#FF4500", emoji: "🐉" },
+        { name: "Серце Життя", chance: 0.5, color: "#FF69B4", emoji: "❤️" }
+    ];
+
+    // Анти-чит змінні
+    let lastTime = 0, clickCount = 0, isBanned = false;
+    let lastX = 0, lastY = 0;
+
+    // Автоклікер
+    setInterval(() => {
+        coins += level * 0.5;
+        refreshUI();
+    }, 1000);
+
+    // Обробка кліку з захистом
+    document.getElementById('coin-btn').addEventListener('touchstart', (e) => {
+        if (isBanned) return;
+
+        const now = Date.now();
+        const delta = now - lastTime;
+        const touch = e.touches[0];
+
+        // Перевірка на швидкість (менше 75мс)
+        if (delta < 75) clickCount++;
+        else clickCount = 0;
+
+        // Перевірка на точність координат (автоклікери б'ють в одну точку)
+        if (lastX === touch.clientX && lastY === touch.clientY && delta < 150) {
+            clickCount += 2;
+        }
+
+        if (clickCount > 15) {
+            isBanned = true;
+            tg.HapticFeedback.notificationOccurred('error');
+            alert("АНТИ-ЧИТ: Виявлено підозрілу активність!");
+            return;
+        }
+
+        lastTime = now;
+        lastX = touch.clientX;
+        lastY = touch.clientY;
+
+        coins += level;
+        spawnText(touch.clientX, touch.clientY);
+        tg.HapticFeedback.impactOccurred('medium');
+        refreshUI();
+    });
+
+    function spawnText(x, y) {
+        const t = document.createElement('div');
+        t.className = 'float';
+        t.innerText = `+${level}`;
+        t.style.left = x + 'px';
+        t.style.top = y + 'px';
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 800);
+    }
+
+    function buyLvl() {
+        if (level >= 10) return;
+        if (coins >= upCosts[level]) {
+            coins -= upCosts[level];
+            level++;
+            refreshUI();
+        }
+    }
+
+    function refreshUI() {
+        document.getElementById('bal').innerText = Math.floor(coins);
+        document.getElementById('lvl').innerText = level;
+        document.getElementById('click-val').innerText = level;
+        document.getElementById('auto-val').innerText = (level * 0.5).toFixed(1);
+        document.getElementById('bar').style.width = (level * 10) + "%";
+        document.getElementById('cost').innerText = level < 10 ? upCosts[level] : "MAX";
+        document.getElementById('up-btn').disabled = level >= 10;
+        localStorage.setItem('coins', coins);
+        localStorage.setItem('level', level);
+        localStorage.setItem('inventory', JSON.stringify(inventory));
+    }
+
+    function tab(id, el) {
+        document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById(id).style.display = 'block';
+        el.classList.add('active');
+        if(id === 'cards-page') drawInv();
+        if(id === 'market-page') drawMkt();
+    }
+
+    async function openCase() {
+        if (coins < 100) return alert("Мало монет!");
+        coins -= 100;
+        let r = Math.random() * 100, cur = 0, win = null;
+        for (let i of items) {
+            cur += i.chance;
+            if (r < cur) { win = i; break; }
+        }
+        if (win) {
+            if (win.type === 'bonus') {
+                let b = Math.floor(Math.random() * 45) + 30;
+                coins += b; alert(`Бонус: +${b} 🪙`);
+            } else if (win.name === "Серце Життя") {
+                const { count } = await supabase.from('global_inventory').select('*', { count: 'exact', head: true }).eq('card_name', 'Серце Життя');
+                if (count < 3) {
+                    addCard(win);
+                    await supabase.from('global_inventory').insert([{ card_name: 'Серце Життя' }]);
+                    alert("ЛЕГЕНДАРНО! ❤️ Ви вибили Серце Життя!");
+                } else alert("Ліміт Сердець (3 шт) вичерпано!");
+            } else {
+                addCard(win); alert("Випав: " + win.name);
+            }
+        } else alert("Нічого не випало (33%)");
+        refreshUI();
+    }
+
+    function addCard(i) {
+        if (!inventory[i.name]) inventory[i.name] = { ...i, count: 0 };
+        if (inventory[i.name].count < 99) inventory[i.name].count++;
+    }
+
+    function drawInv() {
+        const l = document.getElementById('inv-list');
+        l.innerHTML = "";
+        for (let k in inventory) {
+            let c = inventory[k];
+            l.innerHTML += `<div class="card" onclick="sell('${k}')">
+                <div class="card-top" style="background:${c.color}">${c.name}</div>
+                <div class="card-emoji">${c.emoji}</div>
+                <div class="card-count">x${c.count}</div>
+                <div style="font-size:8px; color:gray">ПРОДАТИ</div>
+            </div>`;
+        }
+    }
+
+    async function sell(name) {
+        let p = prompt("Введіть ціну продажу:");
+        if (!p || isNaN(p)) return;
+        let c = inventory[name];
+        const { error } = await supabase.from('market').insert([{ seller: user, card_name: name, price: parseInt(p), card_emoji: c.emoji, card_color: c.color }]);
+        if (!error) {
+            inventory[name].count--;
+            if (inventory[name].count <= 0) delete inventory[name];
+            refreshUI(); drawInv();
+            alert("Виставлено на ринок!");
+        }
+    }
+
+    async function drawMkt() {
+        const d = document.getElementById('mkt-list');
+        d.innerHTML = "Завантаження...";
+        const { data } = await supabase.from('market').select('*');
+        if (data) {
+            d.innerHTML = data.map(i => `
+                <div class="market-row">
+                    <span>${i.card_emoji} <b>${i.card_name}</b> <br><small>від ${i.seller}</small></span>
+                    <button onclick="buy('${i.id}', ${i.price}, '${i.card_name}')">${i.price} 🪙</button>
+                </div>
+            `).join('');
+        }
+    }
+
+    async function buy(id, pr, name) {
+        if (coins < pr) return alert("Мало монет!");
+        const { data } = await supabase.from('market').select('*').eq('id', id).single();
+        if (!data) return alert("Товар вже продано!");
+        coins -= pr;
+        addCard(items.find(i => i.name === name));
+        await supabase.from('market').delete().eq('id', id);
+        alert("Успішна покупка!"); refreshUI(); drawMkt();
+    }
+
+    refreshUI();
+</script>
+</body>
+</html>
