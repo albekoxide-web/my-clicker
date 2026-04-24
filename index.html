@@ -85,10 +85,11 @@
 </div>
 
 <script>
-    // === КОНФІГУРАЦІЯ ===
-const URL = 'https://cpxgsklvgzxplqidqtzx.sb.co'; 
-const KEY = 'sb_publishable_2Diasnju3zsuDNJa-ilk4Q__Wz9qVcS';
-const supabase = supabase.createClient(URL, KEY);
+// === КОНФІГУРАЦІЯ ===
+const PROJECT_URL = https://cpxgsklvgzxplqidqtzx.supabase.co; // проверь окончание в Supabase!
+const PROJECT_KEY = 'sb_publishable_2Diasnju3zsuDNJa-ilk4Q__Wz9qVcS';
+const supabase = window.supabase.createClient(PROJECT_URL, PROJECT_KEY);
+
 
     const tg = window.Telegram.WebApp;
     tg.expand();
