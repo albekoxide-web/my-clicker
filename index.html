@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Real Multiplayer Clicker</title>
-    <script src="https://unpkg.com"></script>
+    <title>Multiplayer Crystal Clicker</title>
+    <!-- Библиотека Supabase -->
+    <script src="https://jsdelivr.net"></script>
     <style>
         :root { --bg: #0b0e14; --panel: #161b22; --accent: #00d2ff; --gold: #ffc400; --red: #ff4d4d; }
         body { background: var(--bg); color: #fff; font-family: sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; user-select: none; }
@@ -14,23 +15,37 @@
         .screen { flex: 1; overflow-y: auto; padding-bottom: 80px; }
         .hidden { display: none !important; }
         
-        /* Кристал */
+        /* Кристалл */
         .click-container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; }
-        #main-crystal { width: 180px; height: 180px; background: linear-gradient(135deg, #00d2ff, #3a7bd5); clip-path: polygon(50% 0%, 90% 20%, 100% 60%, 75% 100%, 25% 100%, 0% 60%, 10% 20%); font-size: 50px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.1s; }
+        #main-crystal { 
+            width: 180px; height: 180px; 
+            background: linear-gradient(135deg, #00d2ff, #3a7bd5); 
+            clip-path: polygon(50% 0%, 90% 20%, 100% 60%, 75% 100%, 25% 100%, 0% 60%, 10% 20%); 
+            font-size: 50px; display: flex; align-items: center; justify-content: center; 
+            cursor: pointer; transition: 0.1s; box-shadow: 0 0 30px rgba(0,210,255,0.3);
+        }
         #main-crystal:active { transform: scale(0.9); }
 
-        /* Картки та Маркет */
+        /* Карточки и Маркет */
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 15px; }
         .card { background: var(--panel); border-radius: 12px; border: 1px solid #30363d; text-align: center; padding-bottom: 10px; overflow: hidden; }
-        .card-header { padding: 5px; font-size: 10px; font-weight: bold; color: #000; }
-        .btn { background: var(--accent); border: none; border-radius: 5px; padding: 6px; font-size: 10px; font-weight: bold; cursor: pointer; width: 80%; margin-top: 5px; }
+        .card-header { padding: 5px; font-size: 10px; font-weight: bold; color: #000; text-transform: uppercase; }
+        .btn { background: var(--accent); border: none; border-radius: 5px; padding: 8px; font-size: 10px; font-weight: bold; cursor: pointer; width: 85%; margin-top: 5px; color: #000; }
         
-        /* Лідерборд */
+        /* Лидерборд */
         .leader-item { display: flex; justify-content: space-between; padding: 12px; background: var(--panel); margin: 5px 15px; border-radius: 8px; border-left: 4px solid var(--accent); }
         
-        nav { position: fixed; bottom: 0; width: 100%; background: #161b22; height: 65px; display: flex; border-top: 1px solid #30363d; }
-        .nav-btn { flex: 1; border: none; background: none; color: #8b949e; font-size: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
+        /* Рулетка */
+        #case-roulette { width: 90%; height: 100px; background: #0d1117; border: 2px solid #30363d; margin: 20px auto; position: relative; overflow: hidden; display: flex; align-items: center; border-radius: 10px; }
+        #roulette-inner { display: flex; position: absolute; left: 50%; transition: transform 4s cubic-bezier(0.15, 0, 0.15, 1); }
+        .item-box { min-width: 80px; height: 80px; background: #161b22; margin: 0 5px; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; border-bottom: 3px solid #333; }
+
+        nav { position: fixed; bottom: 0; width: 100%; background: #161b22; height: 65px; display: flex; border-top: 1px solid #30363d; z-index: 100; }
+        .nav-btn { flex: 1; border: none; background: none; color: #8b949e; font-size: 10px; font-weight: bold; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
         .nav-btn.active { color: var(--accent); }
+
+        .float-n { position: absolute; font-weight: 900; color: var(--accent); pointer-events: none; animation: floatUp 0.7s forwards; }
+        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-80px); } }
     </style>
 </head>
 <body>
@@ -43,6 +58,17 @@
 <main style="flex:1; position:relative;">
     <section id="scr-game" class="screen click-container">
         <div id="main-crystal">💎</div>
+        <p style="color:#555; margin-top:20px;">Клікай на кристал!</p>
+    </section>
+
+    <section id="scr-shop" class="screen hidden">
+        <h3 align="center">📦 Відкрити Кейс</h3>
+        <div id="case-roulette">
+            <div style="position:absolute; left:50%; top:0; bottom:0; width:2px; background:var(--accent); z-index:2; transform:translateX(-50%);"></div>
+            <div id="roulette-inner"></div>
+        </div>
+        <div align="center"><button class="btn" style="width:80%; padding:15px;" onclick="startRoll()">ВІДКРИТИ (100 💰)</button></div>
+        <div id="roll-res" align="center" style="margin-top:15px; color:var(--gold); font-weight:bold;"></div>
     </section>
 
     <section id="scr-market" class="screen hidden">
@@ -63,6 +89,7 @@
 
 <nav>
     <button class="nav-btn active" onclick="show('game', this)">🎮 ГРА</button>
+    <button class="nav-btn" onclick="show('shop', this)">📦 КЕЙСИ</button>
     <button class="nav-btn" onclick="show('market', this)">🛒 МАРКЕТ</button>
     <button class="nav-btn" onclick="show('cards', this)">🃏 КАРТКИ</button>
     <button class="nav-btn" onclick="show('leader', this)">🏆 ТОП</button>
@@ -70,88 +97,137 @@
 
 <script>
     const SB_URL = 'https://cpxgsklvgzxplqidqtzx.supabase.co';
-    const SB_KEY = 'sb_publishable_2Diasnju3zsuDNJa-iLk4Q__Wz9qVcS';
+    const SB_KEY = 'sb_publishable_2Diasnju3zsuDNJa-iLk4Q__Wz9qVcS'; // <--- ВСТАВЬ СЮДА СВОЙ ANON КЛЮЧ
+    
+    // Инициализация Supabase
     const supabase = window.supabase.createClient(SB_URL, SB_KEY);
 
-    // Імітація унікального ID для кожного пристрою
-    let userId = localStorage.getItem('userId') || Array.from(crypto.getRandomValues(new Uint8Array(16))).map(b => b.toString(16).padStart(2, '0')).join('');
+    let userId = localStorage.getItem('userId') || 'user_' + Math.floor(Math.random()*1000000);
     localStorage.setItem('userId', userId);
 
-    let balance = 1000, level = 1, myCards = {};
+    let balance = parseInt(localStorage.getItem('balance')) || 0;
+    let level = parseInt(localStorage.getItem('level')) || 1;
+    let myCards = JSON.parse(localStorage.getItem('myCards')) || {};
 
     const items = [
-        { n: "Гоблін", e: "👺", c: "#22c55e" }, { n: "Дворф", e: "⛏️", c: "#3b82f6" },
-        { n: "Лицар", e: "🛡️", c: "#94a3b8" }, { n: "Король", e: "👑", c: "#f59e0b" },
-        { n: "Дракон", e: "🐉", c: "#ef4444" }
+        { n: "Нічого", p: 33, e: "💨", c: "#94a3b8" },
+        { n: "Гоблін", p: 10, e: "👺", c: "#22c55e" },
+        { n: "Дворф", p: 9, e: "⛏️", c: "#3b82f6" },
+        { n: "Лицар", p: 6, e: "🛡️", c: "#94a3b8" },
+        { n: "Маг Світла", p: 5, e: "✨", c: "#fde047" },
+        { n: "Король", p: 4.5, e: "👑", c: "#f59e0b" },
+        { n: "Дракон", p: 2, e: "🐉", c: "#ef4444" },
+        { n: "Серце життя", p: 0.5, e: "❤️", c: "#ec4899" }
     ];
 
-    // КЛІКЕР
-    document.getElementById('main-crystal').onclick = () => {
+    // КЛИКЕР
+    document.getElementById('main-crystal').addEventListener('pointerdown', (e) => {
         balance += level;
         updateUI();
         syncProfile();
-    };
+        
+        const num = document.createElement('div');
+        num.className = 'float-n'; num.innerText = `+${level}`;
+        num.style.left = e.clientX + 'px'; num.style.top = e.clientY + 'px';
+        document.body.appendChild(num);
+        setTimeout(() => num.remove(), 700);
+    });
 
-    // СИНХРОНІЗАЦІЯ ПРОФІЛЮ (Лідерборд)
     async function syncProfile() {
+        localStorage.setItem('balance', balance);
         await supabase.from('profiles').upsert({ id: userId, balance: balance, level: level });
     }
 
-    // МАРКЕТ: Виставити товар
+    // РУЛЕТКА
+    function startRoll() {
+        if (balance < 100) return alert("Мало монет!");
+        balance -= 100; updateUI();
+        
+        const inner = document.getElementById('roulette-inner');
+        inner.style.transition = 'none'; inner.style.transform = 'translateX(0)'; inner.innerHTML = '';
+        
+        let pool = [];
+        for(let i=0; i<45; i++) {
+            let rand = Math.random()*100, cur=0, winItem = items[0];
+            for(let it of items){ cur+=it.p; if(rand<=cur){winItem=it; break;} }
+            pool.push(winItem);
+            inner.innerHTML += `<div class="item-box" style="border-color:${winItem.c}"><span>${winItem.e}</span><br>${winItem.n}</div>`;
+        }
+
+        const winIndex = 38;
+        const result = pool[winIndex];
+
+        setTimeout(() => {
+            inner.style.transition = 'transform 4s cubic-bezier(0.15, 0, 0.15, 1)';
+            const move = (winIndex * 90) - (inner.parentElement.offsetWidth / 2) + 45;
+            inner.style.transform = `translateX(-${move}px)`;
+        }, 50);
+
+        setTimeout(() => {
+            if(result.n !== "Нічого") {
+                myCards[result.n] = (myCards[result.n] || 0) + 1;
+                localStorage.setItem('myCards', JSON.stringify(myCards));
+            }
+            document.getElementById('roll-res').innerText = `ВИПАЛО: ${result.n} ${result.e}`;
+            updateUI(); syncProfile();
+        }, 4100);
+    }
+
+    // МАРКЕТ
     async function listToMarket(name) {
-        let price = prompt("Ціна (1-9999):", "100");
+        let price = prompt("Ціна продажу (1-99999):", "100");
         if (!price || price < 1) return;
 
         myCards[name]--;
         if (myCards[name] <= 0) delete myCards[name];
+        localStorage.setItem('myCards', JSON.stringify(myCards));
 
         await supabase.from('market').insert({ seller_id: userId, char_name: name, price: parseInt(price) });
-        updateUI();
+        updateUI(); alert("Виставлено на маркет!");
     }
 
-    // МАРКЕТ: Купити товар
     async function buyFromMarket(lotId, price, sellerId, name) {
-        if (sellerId === userId) return alert("Це твій товар!");
-        if (balance < price) return alert("Мало монет!");
+        if (sellerId === userId) return alert("Це ваш товар!");
+        if (balance < price) return alert("Недостатньо монет!");
 
         balance -= price;
         const { error } = await supabase.from('market').delete().eq('id', lotId);
         
         if (!error) {
             myCards[name] = (myCards[name] || 0) + 1;
+            localStorage.setItem('myCards', JSON.stringify(myCards));
+            updateUI(); syncProfile();
             alert("Куплено!");
-            updateUI();
-            syncProfile();
+        } else {
+            alert("Товар вже купили або сталася помилка.");
         }
     }
 
-    // ОНОВЛЕННЯ ЛІДЕРБОРДУ (РЕАЛЬНИЙ ТОП)
+    async function loadMarket() {
+        const { data } = await supabase.from('market').select('*');
+        const list = document.getElementById('market-list');
+        list.innerHTML = data.map(l => {
+            let info = items.find(i => i.n === l.char_name) || {e:'?', c:'#555'};
+            return `
+                <div class="card">
+                    <div class="card-header" style="background:${info.c}">${l.char_name}</div>
+                    <div style="font-size:30px; padding:10px">${info.e}</div>
+                    <div style="font-size:12px">Ціна: ${l.price} 💰</div>
+                    <button class="btn" onclick="buyFromMarket(${l.id}, ${l.price}, '${l.seller_id}', '${l.char_name}')">КУПИТИ</button>
+                </div>
+            `;
+        }).join('');
+    }
+
     async function loadLeaderboard() {
         const { data } = await supabase.from('profiles').select('*').order('balance', { ascending: false }).limit(10);
         const list = document.getElementById('leaderboard-list');
         list.innerHTML = data.map((p, i) => `
             <div class="leader-item">
-                <span>${i+1}. ${p.id === userId ? 'ТИ' : 'Гравець...'+p.id.slice(-4)}</span>
+                <span>${i+1}. ${p.id === userId ? 'Твоє місце (ТИ)' : 'Гравець...'+p.id.slice(-4)}</span>
                 <span>${p.balance} 💰</span>
             </div>
         `).join('');
-    }
-
-    // ОНОВЛЕННЯ МАРКЕТУ (РЕАЛЬНІ ТОВАРИ)
-    async function loadMarket() {
-        const { data } = await supabase.from('market').select('*');
-        const list = document.getElementById('market-list');
-        list.innerHTML = data.map(l => {
-            let info = items.find(i => i.n === l.char_name);
-            return `
-                <div class="card">
-                    <div class="card-header" style="background:${info.c}">${l.char_name}</div>
-                    <div style="font-size:30px; padding:10px">${info.e}</div>
-                    <div>Ціна: ${l.price} 💰</div>
-                    <button class="btn" onclick="buyFromMarket(${l.id}, ${l.price}, '${l.seller_id}', '${l.char_name}')">КУПИТИ</button>
-                </div>
-            `;
-        }).join('');
     }
 
     function updateUI() {
@@ -159,14 +235,16 @@
         document.getElementById('level').innerText = level;
         
         const inv = document.getElementById('inventory');
-        inv.innerHTML = Object.keys(myCards).map(n => {
+        inv.innerHTML = '';
+        for (let n in myCards) {
             let info = items.find(i => i.n === n);
-            return `<div class="card">
+            inv.innerHTML += `<div class="card">
                 <div class="card-header" style="background:${info.c}">${n}</div>
                 <div style="font-size:30px; padding:10px">${info.e}</div>
+                <div style="font-size:10px; color:#888;">Кількість: ${myCards[n]}</div>
                 <button class="btn" onclick="listToMarket('${n}')">ПРОДАТИ</button>
             </div>`;
-        }).join('');
+        }
     }
 
     function show(id, btn) {
@@ -178,8 +256,6 @@
         if (id === 'market') loadMarket();
     }
 
-    // Для тестів дамо одну карту
-    myCards["Гоблін"] = 1;
     updateUI();
 </script>
 </body>
