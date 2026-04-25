@@ -3,186 +3,237 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TG Clicker Game</title>
-    <!-- Підключаємо бібліотеку Supabase -->
+    <title>TG Mega Clicker</title>
     <script src="https://jsdelivr.net"></script>
-    
     <style>
-        :root { --bg: #1a1a1a; --card-bg: #2a2a2a; --gold: #ffcc00; }
-        body { background: var(--bg); color: white; font-family: sans-serif; margin: 0; text-align: center; user-select: none; }
+        :root { --bg: #121212; --gold: #ffcc00; --green: #4caf50; --red: #f44336; }
+        body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; text-align: center; overflow-x: hidden; }
         .hidden { display: none !important; }
         
-        /* Шапка */
-        header { display: flex; justify-content: space-around; padding: 15px; background: #252525; border-bottom: 2px solid var(--gold); }
-        .stat-box { font-size: 18px; font-weight: bold; }
-
-        /* Гра */
+        /* Стіки шапка */
+        header { position: sticky; top: 0; z-index: 10; display: flex; justify-content: space-around; padding: 15px; background: #1e1e1e; border-bottom: 2px solid var(--gold); }
+        
+        /* Коло з анімацією */
         #click-circle {
-            width: 200px; height: 200px; background: radial-gradient(circle, #fbc02d, #f57f17);
-            border-radius: 50%; margin: 50px auto; position: relative;
-            box-shadow: 0 0 20px rgba(255, 204, 0, 0.4); cursor: pointer;
-            display: flex; align-items: center; justify-content: center; font-size: 80px;
-            transition: transform 0.05s;
+            width: 220px; height: 220px; background: radial-gradient(circle, #fbc02d, #f57f17);
+            border-radius: 50%; margin: 40px auto; display: flex; align-items: center; justify-content: center;
+            font-size: 80px; cursor: pointer; transition: transform 0.05s; box-shadow: 0 0 25px rgba(255,204,0,0.3);
         }
-        #click-circle:active { transform: scale(0.92); }
+        #click-circle:active { transform: scale(0.95); }
 
         /* Картки */
-        .cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; padding-bottom: 80px; }
-        .card { background: var(--card-bg); border-radius: 12px; height: 160px; overflow: hidden; border: 1px solid #444; position: relative; }
-        .card-header { height: 30px; font-size: 12px; font-weight: bold; display: flex; align-items: center; justify-content: center; color: black; }
-        .card-emoji { font-size: 50px; margin-top: 20px; }
-        .card-count { position: absolute; bottom: 5px; right: 10px; font-size: 12px; color: #aaa; }
+        .cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 15px; padding-bottom: 100px; }
+        .card { background: #252525; border-radius: 12px; overflow: hidden; border: 1px solid #333; position: relative; padding-bottom: 10px; }
+        .card-header { height: 30px; font-size: 11px; font-weight: bold; display: flex; align-items: center; justify-content: center; color: #000; text-transform: uppercase; }
+        .card-emoji { font-size: 45px; margin: 15px 0; }
+        .btn-sell { background: var(--green); border: none; color: white; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 11px; }
+
+        /* Маркет */
+        .market-item { border: 1px solid var(--gold); padding: 10px; border-radius: 10px; background: #1e1e1e; margin: 10px; display: flex; justify-content: space-between; align-items: center; }
 
         /* Навігація */
-        nav { position: fixed; bottom: 0; width: 100%; display: flex; background: #252525; height: 65px; border-top: 1px solid #444; }
-        .nav-btn { flex: 1; border: none; background: none; color: white; cursor: pointer; font-size: 11px; }
+        nav { position: fixed; bottom: 0; width: 100%; display: flex; background: #1e1e1e; height: 70px; border-top: 1px solid #333; }
+        .nav-btn { flex: 1; border: none; background: none; color: #888; font-size: 10px; font-weight: bold; }
+        .nav-btn.active { color: var(--gold); }
 
-        /* Анімація вильоту цифр */
-        .float-text { position: absolute; color: var(--gold); font-weight: bold; pointer-events: none; animation: floatUp 0.6s ease-out forwards; }
-        @keyframes floatUp { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-100px); opacity: 0; } }
-
-        .main-btn { background: var(--gold); border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; margin: 10px; }
+        /* Ефекти */
+        .float-text { position: absolute; color: var(--gold); font-weight: bold; pointer-events: none; animation: floatUp 0.7s forwards; }
+        @keyframes floatUp { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-80px); opacity: 0; } }
+        
+        .main-btn { background: var(--gold); border: none; padding: 12px 25px; border-radius: 10px; font-weight: bold; margin: 20px; width: 80%; }
     </style>
 </head>
 <body>
 
-    <header>
-        <div class="stat-box">💰 <span id="balance">0</span></div>
-        <div class="stat-box">⭐ Рівень: <span id="level">1</span></div>
-    </header>
+<header>
+    <div>💰 <span id="balance">0</span></div>
+    <div>⭐ Lvl: <span id="level">1</span></div>
+</header>
 
-    <!-- Екрани -->
-    <section id="scr-game">
-        <div id="click-circle">🔘</div>
-        <p>Клікай для заробітку!</p>
-    </section>
+<section id="scr-game">
+    <div id="click-circle">🔘</div>
+    <p>Клікай та прокачуйся!</p>
+</section>
 
-    <section id="scr-shop" class="hidden">
-        <h2>Магазин кейсів</h2>
-        <button class="main-btn" onclick="openCase()">Відкрити кейс (100 💰)</button>
-        <div id="reward-out"></div>
-    </section>
+<section id="scr-shop" class="hidden">
+    <h2>Прокачка & Кейси</h2>
+    <div id="case-res" style="height: 50px; font-weight: bold; color: var(--gold);"></div>
+    <button class="main-btn" onclick="openCase()">ВІДКРИТИ КЕЙС (100 💰)</button>
+</section>
 
-    <section id="scr-cards" class="hidden">
-        <h2>Твої картки</h2>
-        <div id="inventory" class="cards-grid"></div>
-    </section>
+<section id="scr-cards" class="hidden">
+    <h2>Колекція (макс 99/вид)</h2>
+    <div id="inventory" class="cards-grid"></div>
+</section>
 
-    <section id="scr-market" class="hidden">
-        <h2>Маркет</h2>
-        <p>Тут можна буде купувати картки інших гравців</p>
-        <div id="market-list" class="cards-grid"></div>
-    </section>
+<section id="scr-market" class="hidden">
+    <h2>Маркет (до 3 лотів)</h2>
+    <div id="market-list"></div>
+    <hr>
+    <h3>Ваші активні лоти</h3>
+    <div id="my-active-lots"></div>
+</section>
 
-    <nav>
-        <button class="nav-btn" onclick="show('game')">🎮 ГРА</button>
-        <button class="nav-btn" onclick="show('shop')">📦 КЕЙСИ</button>
-        <button class="nav-btn" onclick="show('cards')">🃏 КАРТКИ</button>
-        <button class="nav-btn" onclick="show('market')">🛒 МАРКЕТ</button>
-    </nav>
+<nav>
+    <button class="nav-btn active" onclick="show('game', this)">🎮 ГРА</button>
+    <button class="nav-btn" onclick="show('shop', this)">📦 КЕЙСИ</button>
+    <button class="nav-btn" onclick="show('cards', this)">🃏 КАРТКИ</button>
+    <button class="nav-btn" onclick="show('market', this)">🛒 МАРКЕТ</button>
+</nav>
 
-    <script>
-        // ДАНІ SUPABASE
-        const SB_URL = 'https://cpxgsklvgzxplqidqtzx.supabase.co';
-        const SB_KEY = 'sb_publishable_2Diasnju3zsuDNJa-iLk4Q'; 
-        const supabase = typeof supabase !== 'undefined' ? supabase.createClient(SB_URL, SB_KEY) : null;
+<!-- Звуки (синтезовані, якщо немає файлів) -->
+<script>
+    const SB_URL = 'https://cpxgsklvgzxplqidqtzx.supabase.co';
+    const SB_KEY = 'sb_publishable_2Diasnju3zsuDNJa-iLk4Q'; 
+    const supabase = lib.supabase.createClient(SB_URL, SB_KEY);
 
-        let balance = 0;
-        let level = 1;
-        let xp = 0;
-        let myCards = {};
+    let balance = 0, level = 1, xp = 0;
+    let myCards = {}; // Формат: { "Гоблін": 2 }
+    let myLots = []; // Твої виставлені картки на маркет
 
-        const characters = [
-            { n: "Нічого", p: 33, e: "💨", c: "#777" },
-            { n: "30-75 монет", p: 10, e: "💰", c: "#FFD700" },
-            { n: "Нищий", p: 20, e: "🏚️", c: "#8B4513" },
-            { n: "Гоблін", p: 10, e: "👺", c: "#228B22" },
-            { n: "Дворф", p: 9, e: "⛏️", c: "#4682B4" },
-            { n: "Лицар", p: 6, e: "🛡️", c: "#C0C0C0" },
-            { n: "Маг Світла", p: 5, e: "✨", c: "#FFFACD" },
-            { n: "Король", p: 4.5, e: "👑", c: "#FF8C00" },
-            { n: "Дракон", p: 2, e: "🐉", c: "#B22222" },
-            { n: "Серце життя", p: 0.5, e: "❤️", c: "#FF1493" }
-        ];
+    const chars = [
+        { n: "Нічого", p: 33, e: "💨", c: "#777" },
+        { n: "30-75 монет", p: 10, e: "💰", c: "#FFD700" },
+        { n: "Нищий", p: 20, e: "🏚️", c: "#8B4513" },
+        { n: "Гоблін", p: 10, e: "👺", c: "#228B22" },
+        { n: "Дворф", p: 9, e: "⛏️", c: "#4682B4" },
+        { n: "Лицар", p: 6, e: "🛡️", c: "#C0C0C0" },
+        { n: "Маг Світла", p: 5, e: "✨", c: "#FFFACD" },
+        { n: "Король", p: 4.5, e: "👑", c: "#FF8C00" },
+        { n: "Дракон", p: 2, e: "🐉", c: "#B22222" },
+        { n: "Серце життя", p: 0.5, e: "❤️", c: "#FF1493" }
+    ];
 
-        // КЛІКЕР
-        document.getElementById('click-circle').onclick = function(e) {
-            let add = level; // +1 монета за кожен рівень
-            balance += add;
-            xp++;
-            
-            // Система рівнів (макс 10)
-            if (xp >= level * 50 && level < 10) {
-                level++;
-                xp = 0;
-                alert("Новий рівень: " + level);
-            }
+    // --- ЗВУКИ ---
+    function playSound(freq) {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.connect(g); g.connect(ctx.destination);
+        osc.frequency.value = freq;
+        g.gain.setValueAtTime(0.1, ctx.currentTime);
+        osc.start(); g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.1);
+        osc.stop(ctx.currentTime + 0.1);
+    }
 
-            // Анімація кліку
-            const ft = document.createElement('div');
-            ft.className = 'float-text';
-            ft.innerText = '+' + add;
-            ft.style.left = e.pageX + 'px';
-            ft.style.top = e.pageY + 'px';
-            document.body.appendChild(ft);
-            setTimeout(() => ft.remove(), 600);
+    // --- КЛІКЕР ---
+    document.getElementById('click-circle').onclick = function(e) {
+        let earn = level;
+        balance += earn;
+        xp++;
+        if (xp >= level * 100 && level < 10) { level++; xp = 0; playSound(800); }
+        
+        playSound(400);
+        showFloat(e, `+${earn}`);
+        updateUI();
+    };
 
-            updateUI();
-        };
+    // --- КЕЙСИ ---
+    async function openCase() {
+        if (balance < 100) return alert("Мало монет!");
+        balance -= 100;
+        
+        let r = Math.random() * 100;
+        let cur = 0, win = chars[0];
 
-        // ВІДКРИТТЯ КЕЙСУ
-        function openCase() {
-            if (balance < 100) return alert("Мало монет!");
-            balance -= 100;
+        for (let c of chars) {
+            cur += c.p;
+            if (r <= cur) { win = c; break; }
+        }
 
-            let r = Math.random() * 100;
-            let curr = 0;
-            let win = characters[0];
+        // Умова: тільки 3 Серця на весь світ (приклад через базу)
+        if (win.n === "Серце життя") {
+            const { count } = await supabase.from('user_cards').select('*', { count: 'exact', head: true }).eq('char_name', 'Серце життя');
+            if (count >= 3) win = chars[0]; 
+        }
 
-            for (let c of characters) {
-                curr += c.p;
-                if (r <= curr) { win = c; break; }
-            }
-
-            if (win.n === "30-75 монет") {
-                let m = Math.floor(Math.random() * 45) + 30;
-                balance += m;
-                document.getElementById('reward-out').innerHTML = "Ви виграли " + m + " 💰";
-            } else if (win.n !== "Нічого") {
-                if (!myCards[win.n]) myCards[win.n] = { ...win, count: 0 };
-                if (myCards[win.n].count < 99) myCards[win.n].count++;
-                document.getElementById('reward-out').innerHTML = `Випало: ${win.e} ${win.n}`;
-                renderCards();
+        if (win.n.includes("монет")) {
+            let m = Math.floor(Math.random() * 45) + 30;
+            balance += m;
+            document.getElementById('case-res').innerText = `Виграно ${m} монет!`;
+        } else if (win.n !== "Нічого") {
+            if ((myCards[win.n] || 0) < 99) {
+                myCards[win.n] = (myCards[win.n] || 0) + 1;
+                document.getElementById('case-res').innerText = `Отримано: ${win.n}`;
             } else {
-                document.getElementById('reward-out').innerHTML = "Пусто... 💨";
+                document.getElementById('case-res').innerText = `Вже є 99 ${win.n}!`;
             }
-            updateUI();
+        } else {
+            document.getElementById('case-res').innerText = "Нічого не випало...";
+        }
+        updateUI();
+    }
+
+    // --- МАРКЕТ ---
+    function sellCard(name) {
+        if (myLots.length >= 3) return alert("Максимум 3 лоти на маркеті!");
+        let price = prompt("Введіть ціну (1 - 99999):", "100");
+        price = parseInt(price);
+        if (isNaN(price) || price < 1 || price > 99999) return alert("Невірна ціна");
+
+        myCards[name]--;
+        if (myCards[name] <= 0) delete myCards[name];
+        
+        myLots.push({ name: name, price: price, id: Date.now() });
+        updateUI();
+        alert("Виставлено!");
+    }
+
+    function removeLot(id) {
+        let lot = myLots.find(l => l.id === id);
+        myCards[lot.name] = (myCards[lot.name] || 0) + 1;
+        myLots = myLots.filter(l => l.id !== id);
+        updateUI();
+    }
+
+    // --- СЕРВІСНІ ФУНКЦІЇ ---
+    function updateUI() {
+        document.getElementById('balance').innerText = balance;
+        document.getElementById('level').innerText = level;
+        
+        // Рендер інвентаря
+        const inv = document.getElementById('inventory');
+        inv.innerHTML = "";
+        for (let name in myCards) {
+            let info = chars.find(c => c.n === name);
+            inv.innerHTML += `
+                <div class="card">
+                    <div class="card-header" style="background:${info.c}">${name}</div>
+                    <div class="card-emoji">${info.e}</div>
+                    <div>К-сть: ${myCards[name]}</div>
+                    <button class="btn-sell" onclick="sellCard('${name}')">Продати</button>
+                </div>`;
         }
 
-        function renderCards() {
-            const container = document.getElementById('inventory');
-            container.innerHTML = "";
-            for (let key in myCards) {
-                let c = myCards[key];
-                container.innerHTML += `
-                    <div class="card">
-                        <div class="card-header" style="background:${c.c}">${c.n}</div>
-                        <div class="card-emoji">${c.e}</div>
-                        <div class="card-count">${c.count}/99</div>
-                    </div>
-                `;
-            }
-        }
+        // Рендер моїх лотів
+        const lotDiv = document.getElementById('my-active-lots');
+        lotDiv.innerHTML = "";
+        myLots.forEach(l => {
+            lotDiv.innerHTML += `
+                <div class="market-item">
+                    <span>${l.name} - <b>${l.price} 💰</b></span>
+                    <button onclick="removeLot(${l.id})" style="background:var(--red); border:none; color:white; border-radius:5px;">Зняти</button>
+                </div>`;
+        });
+    }
 
-        function updateUI() {
-            document.getElementById('balance').innerText = balance;
-            document.getElementById('level').innerText = level;
-        }
+    function show(id, btn) {
+        document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('scr-' + id).classList.remove('hidden');
+        btn.classList.add('active');
+        updateUI();
+    }
 
-        function show(id) {
-            document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
-            document.getElementById('scr-' + id).classList.remove('hidden');
-        }
-    </script>
+    function showFloat(e, txt) {
+        const f = document.createElement('div');
+        f.className = 'float-text';
+        f.innerText = txt;
+        f.style.left = e.pageX + 'px';
+        f.style.top = e.pageY + 'px';
+        document.body.appendChild(f);
+        setTimeout(() => f.remove(), 700);
+    }
+</script>
 </body>
 </html>
