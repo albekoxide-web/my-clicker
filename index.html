@@ -3,260 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TG Crystal Clicker</title>
-    <!-- Библиотека Supabase -->
+    <title>Neon Crystal Clicker</title>
+    <!-- ПРАВИЛЬНЕ ПІДКЛЮЧЕННЯ SUPABASE -->
     <script src="https://unpkg.com"></script>
-    
     <style>
         :root {
-            --bg: #0f172a;
-            --panel: #1e293b;
-            --accent: #38bdf8;
-            --gold: #fbbf24;
-            --text: #f8fafc;
+            --bg: #0b0e14;
+            --panel: #161b22;
+            --accent: #00d2ff;
+            --gold: #ffc400;
         }
 
         body {
-            background-color: var(--bg);
-            color: var(--text);
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg);
+            color: #fff;
+            font-family: 'Inter', sans-serif;
             margin: 0;
             display: flex;
             flex-direction: column;
             height: 100vh;
             overflow: hidden;
+            user-select: none;
         }
 
-        /* Шапка */
         header {
-            background: var(--panel);
-            padding: 15px;
+            padding: 20px;
             display: flex;
             justify-content: space-around;
-            border-bottom: 1px solid #334155;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            background: rgba(22, 27, 34, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #30363d;
         }
 
-        .stat-card {
-            text-align: center;
+        .stat-val { font-size: 22px; font-weight: 900; color: var(--accent); display: block; }
+        .stat-label { font-size: 10px; color: #8b949e; text-transform: uppercase; }
+
+        .click-container { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; }
+        
+        #main-crystal {
+            width: 200px; height: 200px;
+            background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+            clip-path: polygon(50% 0%, 90% 20%, 100% 60%, 75% 100%, 25% 100%, 0% 60%, 10% 20%);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 60px; cursor: pointer;
+            box-shadow: 0 0 50px rgba(0, 210, 255, 0.3);
+            transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 4px solid rgba(255,255,255,0.2);
         }
 
-        .stat-value {
-            display: block;
-            font-size: 1.2rem;
-            font-weight: 800;
-            color: var(--accent);
+        #main-crystal:active { transform: scale(0.9); }
+
+        #case-roulette {
+            width: 100%; height: 120px; background: #0d1117;
+            border: 2px solid #30363d; margin: 20px 0;
+            position: relative; overflow: hidden; display: flex; align-items: center;
         }
 
-        .stat-label {
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #94a3b8;
+        #roulette-inner { display: flex; position: absolute; left: 50%; transition: transform 4s cubic-bezier(0.15, 0, 0.15, 1); }
+
+        .item-box {
+            min-width: 100px; height: 100px; background: #161b22;
+            margin: 0 5px; border-radius: 10px; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; font-size: 12px; border-bottom: 4px solid #333;
         }
 
-        /* Основная область */
-        main {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-        }
+        .cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 20px; overflow-y: auto; padding-bottom: 100px; }
+        .card { background: var(--panel); border-radius: 15px; border: 1px solid #30363d; overflow: hidden; }
+        .card-header { padding: 5px; font-size: 10px; font-weight: bold; text-align: center; color: #000; }
 
-        .screen {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-            box-sizing: border-box;
-            overflow-y: auto;
-        }
+        nav { position: fixed; bottom: 0; width: 100%; background: #161b22; height: 70px; display: flex; border-top: 1px solid #30363d; }
+        .nav-btn { flex: 1; border: none; background: none; color: #8b949e; font-size: 11px; font-weight: bold; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; cursor: pointer; }
+        .nav-btn.active { color: var(--accent); }
+
+        .float-n { position: absolute; font-weight: 900; color: var(--accent); pointer-events: none; animation: floatUp 0.8s ease-out forwards; z-index: 100; }
+        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-100px) scale(1.5); } }
 
         .hidden { display: none !important; }
-
-        /* Кликер */
-        #click-circle {
-            width: 240px;
-            height: 240px;
-            background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 100px;
-            cursor: pointer;
-            box-shadow: 0 0 40px rgba(37, 99, 235, 0.4), inset 0 0 20px rgba(255,255,255,0.2);
-            transition: transform 0.05s ease;
-            border: 8px solid rgba(255,255,255,0.1);
-        }
-
-        #click-circle:active { transform: scale(0.92); }
-
-        /* Карточки */
-        .cards-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            width: 100%;
-            padding-bottom: 100px;
-        }
-
-        .card {
-            background: var(--panel);
-            border-radius: 16px;
-            overflow: hidden;
-            border: 1px solid #334155;
-            transition: 0.3s;
-        }
-
-        .card-header {
-            padding: 8px;
-            font-size: 10px;
-            font-weight: 900;
-            text-align: center;
-            color: #000;
-        }
-
-        .card-body {
-            padding: 15px;
-            text-align: center;
-        }
-
-        .card-emoji { font-size: 40px; display: block; margin-bottom: 5px; }
-
-        /* Навигация */
-        nav {
-            background: var(--panel);
-            height: 75px;
-            display: flex;
-            border-top: 1px solid #334155;
-            padding-bottom: env(safe-area-inset-bottom);
-        }
-
-        .nav-btn {
-            flex: 1;
-            border: none;
-            background: none;
-            color: #64748b;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 5px;
-            font-size: 10px;
-            font-weight: 600;
-        }
-
-        .nav-btn.active { color: var(--accent); }
-        .nav-btn svg { width: 24px; height: 24px; fill: currentColor; }
-
-        /* Анимация клика */
-        .floating-text {
-            position: absolute;
-            color: var(--accent);
-            font-weight: 900;
-            pointer-events: none;
-            animation: floatMove 0.8s ease-out forwards;
-            font-size: 24px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-        }
-
-        @keyframes floatMove {
-            0% { transform: translateY(0); opacity: 1; }
-            100% { transform: translateY(-120px) scale(1.2); opacity: 0; }
-        }
-
-        .btn-action {
-            background: var(--accent);
-            color: #000;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 12px;
-            font-weight: bold;
-            width: 100%;
-            margin-top: 10px;
-        }
     </style>
 </head>
 <body>
 
 <header>
-    <div class="stat-card">
-        <span class="stat-label">Баланс</span>
-        <span class="stat-value" id="balance">0</span>
-    </div>
-    <div class="stat-card">
-        <span class="stat-label">Рівень</span>
-        <span class="stat-value" id="level">1</span>
-    </div>
+    <div align="center"><span class="stat-label">Монети</span><span class="stat-val" id="balance">0</span></div>
+    <div align="center"><span class="stat-label">Рівень</span><span class="stat-val" id="level">1</span></div>
 </header>
 
-<main>
-    <section id="scr-game" class="screen">
-        <div style="flex:1; display:flex; align-items:center;">
-            <div id="click-circle">💎</div>
+<main style="flex:1; display:flex; flex-direction:column;">
+    <section id="scr-game" class="screen click-container">
+        <div id="main-crystal">💎</div>
+    </section>
+
+    <section id="scr-shop" class="screen hidden" style="padding: 20px;">
+        <h2>Магазин Кейсів</h2>
+        <div id="case-roulette">
+            <div style="position:absolute; left:50%; top:0; bottom:0; width:2px; background:var(--accent); z-index:2; transform:translateX(-50%);"></div>
+            <div id="roulette-inner"></div>
         </div>
-        <p style="color: #94a3b8; font-size: 14px;">Клікай на кристал!</p>
+        <button onclick="startRoll()" id="btn-roll" style="width:100%; padding:15px; background:var(--accent); border:none; border-radius:10px; font-weight:900; cursor:pointer;">ВІДКРИТИ (100 💰)</button>
     </section>
 
-    <section id="scr-shop" class="screen hidden">
-        <h2 style="margin-top:0">Магазин кейсів</h2>
-        <div id="reward-display" style="min-height: 50px; font-size: 20px; color: var(--gold); margin-bottom: 20px;"></div>
-        <button class="btn-action" onclick="openCase()">ВІДКРИТИ КЕЙС (100 💰)</button>
-    </section>
-
-    <section id="scr-cards" class="screen hidden">
-        <h2 style="margin-top:0">Твоя колекція</h2>
-        <div id="inventory" class="cards-grid"></div>
-    </section>
-
-    <section id="scr-market" class="screen hidden">
-        <h2>Маркет</h2>
-        <p>Розділ у розробці...</p>
-    </section>
+    <section id="scr-cards" class="screen hidden cards-grid"></section>
 </main>
 
 <nav>
-    <button class="nav-btn active" onclick="show('game', this)">
-        <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-        ГРА
-    </button>
-    <button class="nav-btn" onclick="show('shop', this)">
-        <svg viewBox="0 0 24 24"><path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"/></svg>
-        КЕЙСИ
-    </button>
-    <button class="nav-btn" onclick="show('cards', this)">
-        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
-        КАРТКИ
-    </button>
-    <button class="nav-btn" onclick="show('market', this)">
-        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
-        МАРКЕТ
-    </button>
+    <button class="nav-btn active" onclick="show('game', this)"><span>🎮</span>ГРА</button>
+    <button class="nav-btn" onclick="show('shop', this)"><span>📦</span>КЕЙСИ</button>
+    <button class="nav-btn" onclick="show('cards', this)"><span>🃏</span>КАРТКИ</button>
 </nav>
 
 <script>
-    // Инициализация Supabase с проверкой
+    // ВСТАВ СВОЇ КЛЮЧІ ТУТ
     const SB_URL = 'https://cpxgsklvgzxplqidqtzx.supabase.co';
-    const SB_KEY = 'sb_publishable_2Diasnju3zsuDNJa-iLk4Q'; 
-    let supabase = null;
+    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'; // Твій ANON KEY
+    const supabase = window.supabase ? window.supabase.createClient(SB_URL, SB_KEY) : null;
 
-    if (window.supabase) {
-        supabase = window.supabase.createClient(SB_URL, SB_KEY);
-    } else {
-        console.error("Supabase library not loaded!");
-    }
+    let balance = parseInt(localStorage.getItem('balance')) || 0;
+    let level = parseInt(localStorage.getItem('level')) || 1;
+    let xp = parseInt(localStorage.getItem('xp')) || 0;
+    let myCards = JSON.parse(localStorage.getItem('myCards')) || {};
 
-    let balance = 0, level = 1, xp = 0;
-    let myCards = JSON.parse(localStorage.getItem('cards')) || {};
-
-    const characters = [
+    const items = [
         { n: "Нічого", p: 33, e: "💨", c: "#94a3b8" },
-        { n: "30-75 монет", p: 10, e: "💰", c: "#fbbf24" },
+        { n: "50 монет", p: 10, e: "💰", c: "#fbbf24" },
         { n: "Нищий", p: 20, e: "🏚️", c: "#78350f" },
         { n: "Гоблін", p: 10, e: "👺", c: "#22c55e" },
         { n: "Дворф", p: 9, e: "⛏️", c: "#3b82f6" },
@@ -267,60 +135,86 @@
         { n: "Серце життя", p: 0.5, e: "❤️", c: "#ec4899" }
     ];
 
-    document.getElementById('click-circle').onclick = function(e) {
+    const crystal = document.getElementById('main-crystal');
+    crystal.addEventListener('pointerdown', (e) => {
         balance += level;
         xp++;
-        if (xp >= level * 50 && level < 10) {
-            level++;
-            xp = 0;
-        }
-        showFloatText(e, `+${level}`);
+        if (xp >= level * 100) { level++; xp = 0; }
+        
+        const num = document.createElement('div');
+        num.className = 'float-n';
+        num.innerText = `+${level}`;
+        num.style.left = e.clientX + 'px';
+        num.style.top = e.clientY + 'px';
+        document.body.appendChild(num);
+        setTimeout(() => num.remove(), 800);
+        
         updateUI();
-    };
+        saveLocal();
+    });
 
-    function openCase() {
+    function startRoll() {
         if (balance < 100) return alert("Мало монет!");
         balance -= 100;
-
-        let r = Math.random() * 100;
-        let cur = 0, win = characters[0];
-
-        for (let c of characters) {
-            cur += c.p;
-            if (r <= cur) { win = c; break; }
-        }
-
-        if (win.n.includes("монет")) {
-            let m = Math.floor(Math.random() * 45) + 30;
-            balance += m;
-            document.getElementById('reward-display').innerText = `🎁 +${m} монет!`;
-        } else if (win.n !== "Нічого") {
-            myCards[win.n] = (myCards[win.n] || 0) + 1;
-            document.getElementById('reward-display').innerText = `🎉 Випав ${win.n}!`;
-            localStorage.setItem('cards', JSON.stringify(myCards));
-        } else {
-            document.getElementById('reward-display').innerText = "💨 Пусто...";
-        }
         updateUI();
+
+        const inner = document.getElementById('roulette-inner');
+        inner.style.transition = 'none';
+        inner.style.transform = 'translateX(0)';
+        inner.innerHTML = '';
+
+        let pool = [];
+        for(let i=0; i<50; i++) {
+            let rand = Math.random()*100, cur=0, item = items[0];
+            for(let it of items){ cur+=it.p; if(rand<=cur){item=it; break;} }
+            pool.push(item);
+            inner.innerHTML += `<div class="item-box" style="border-color:${item.c}"><span>${item.e}</span><br>${item.n}</div>`;
+        }
+
+        const winIndex = 40; 
+        const winItem = pool[winIndex];
+        
+        setTimeout(() => {
+            inner.style.transition = 'transform 4s cubic-bezier(0.15, 0, 0.15, 1)';
+            const move = (winIndex * 110) - (inner.parentElement.offsetWidth / 2) + 55;
+            inner.style.transform = `translateX(-${move}px)`;
+        }, 50);
+
+        setTimeout(() => {
+            if(winItem.n === "50 монет") {
+                balance += 50;
+            } else if(winItem.n !== "Нічого") {
+                myCards[winItem.n] = (myCards[winItem.n] || 0) + 1;
+            }
+            updateUI();
+            saveLocal();
+            alert(`Випало: ${winItem.n} ${winItem.e}`);
+        }, 4100);
+    }
+
+    function saveLocal() {
+        localStorage.setItem('balance', balance);
+        localStorage.setItem('level', level);
+        localStorage.setItem('xp', xp);
+        localStorage.setItem('myCards', JSON.stringify(myCards));
     }
 
     function updateUI() {
-        document.getElementById('balance').innerText = Math.floor(balance);
+        document.getElementById('balance').innerText = balance;
         document.getElementById('level').innerText = level;
 
-        const inv = document.getElementById('inventory');
-        inv.innerHTML = "";
-        for (let name in myCards) {
-            let info = characters.find(c => c.n === name);
-            if (!info) continue;
-            inv.innerHTML += `
-                <div class="card">
-                    <div class="card-header" style="background:${info.c}">${name}</div>
-                    <div class="card-body">
-                        <span class="card-emoji">${info.e}</span>
-                        <small>Кількість: ${myCards[name]}</small>
-                    </div>
-                </div>`;
+        const inv = document.getElementById('scr-cards');
+        inv.innerHTML = '';
+        for (let n in myCards) {
+            let info = items.find(i => i.n === n);
+            if(!info) continue;
+            inv.innerHTML += `<div class="card">
+                <div class="card-header" style="background:${info.c}">${n}</div>
+                <div style="padding:15px; text-align:center;">
+                    <div style="font-size:30px;">${info.e}</div>
+                    <div style="font-size:12px; color:#8b949e;">К-сть: ${myCards[n]}</div>
+                </div>
+            </div>`;
         }
     }
 
@@ -330,16 +224,6 @@
         document.getElementById('scr-' + id).classList.remove('hidden');
         btn.classList.add('active');
         updateUI();
-    }
-
-    function showFloatText(e, txt) {
-        const f = document.createElement('div');
-        f.className = 'floating-text';
-        f.innerText = txt;
-        f.style.left = (e.clientX || e.touches[0].clientX) + 'px';
-        f.style.top = (e.clientY || e.touches[0].clientY) + 'px';
-        document.body.appendChild(f);
-        setTimeout(() => f.remove(), 800);
     }
 
     updateUI();
