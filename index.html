@@ -3,19 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Crystal Clicker Online</title>
-    <!-- Підключаємо бібліотеку Supabase через CDN -->
+    <title>Crystal Clicker Multiplayer</title>
+    <!-- Резервне підключення бібліотеки -->
     <script src="https://jsdelivr.net"></script>
+    <script>
+        if (!window.supabase) {
+            document.write('<script src="https://unpkg.com"><\/script>');
+        }
+    </script>
     <style>
-        :root { --bg: #0b0e14; --panel: #161b22; --accent: #00d2ff; --gold: #ffc400; --red: #ff4d4d; }
+        :root { --bg: #0b0e14; --panel: #161b22; --accent: #00d2ff; --gold: #ffc400; }
         body { background: var(--bg); color: #fff; font-family: sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; user-select: none; }
         header { padding: 15px; display: flex; justify-content: space-around; background: #161b22; border-bottom: 1px solid #30363d; }
         .stat-val { font-size: 20px; font-weight: 900; color: var(--accent); display: block; }
         .stat-label { font-size: 9px; color: #8b949e; text-transform: uppercase; }
         .screen { flex: 1; overflow-y: auto; padding-bottom: 80px; }
         .hidden { display: none !important; }
-        
-        /* Кристал */
         .click-container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; }
         #main-crystal { 
             width: 180px; height: 180px; background: linear-gradient(135deg, #00d2ff, #3a7bd5); 
@@ -23,23 +26,13 @@
             font-size: 50px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.1s;
         }
         #main-crystal:active { transform: scale(0.9); }
-
-        /* Сітка карток */
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 15px; }
         .card { background: var(--panel); border-radius: 12px; border: 1px solid #30363d; text-align: center; padding-bottom: 10px; overflow: hidden; }
         .card-header { padding: 5px; font-size: 10px; font-weight: bold; color: #000; text-transform: uppercase; }
-        .btn { background: var(--accent); border: none; border-radius: 5px; padding: 8px; font-size: 10px; font-weight: bold; cursor: pointer; width: 85%; margin-top: 5px; color: #000; }
-        
-        /* Рулетка */
-        #case-roulette { width: 90%; height: 100px; background: #0d1117; border: 2px solid #30363d; margin: 20px auto; position: relative; overflow: hidden; display: flex; align-items: center; border-radius: 10px; }
-        #roulette-inner { display: flex; position: absolute; left: 50%; transition: transform 4s cubic-bezier(0.15, 0, 0.15, 1); }
-        .item-box { min-width: 80px; height: 80px; background: #161b22; margin: 0 5px; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; border-bottom: 3px solid #333; }
-
-        /* Навігація */
+        .btn { background: var(--accent); border: none; border-radius: 5px; padding: 8px; font-size: 10px; font-weight: bold; cursor: pointer; width: 85%; margin-top: 5px; }
         nav { position: fixed; bottom: 0; width: 100%; background: #161b22; height: 65px; display: flex; border-top: 1px solid #30363d; }
         .nav-btn { flex: 1; border: none; background: none; color: #8b949e; font-size: 10px; font-weight: bold; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
         .nav-btn.active { color: var(--accent); }
-
         .float-n { position: absolute; font-weight: 900; color: var(--accent); pointer-events: none; animation: floatUp 0.7s forwards; }
         @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-80px); } }
     </style>
@@ -52,30 +45,23 @@
 </header>
 
 <main style="flex:1; position:relative;">
-    <section id="scr-game" class="screen click-container">
-        <div id="main-crystal">💎</div>
-    </section>
-
+    <section id="scr-game" class="screen click-container"><div id="main-crystal">💎</div></section>
     <section id="scr-shop" class="screen hidden">
-        <h3 align="center">📦 Відкрити Кейс (100 💰)</h3>
-        <div id="case-roulette"><div id="roulette-inner"></div></div>
-        <div align="center"><button class="btn" style="width:80%; padding:15px;" onclick="startRoll()">ВІДКРИТИ</button></div>
-        <div id="roll-res" align="center" style="margin-top:15px; color:var(--gold); font-weight:bold;"></div>
+        <h3 align="center">📦 Кейси</h3>
+        <div align="center"><button class="btn" style="width:80%; padding:15px;" onclick="startRoll()">ВІДКРИТИ (100 💰)</button></div>
+        <div id="roll-res" align="center" style="margin-top:20px; font-weight:bold;"></div>
     </section>
-
     <section id="scr-market" class="screen hidden">
         <h3 align="center">🛒 Глобальний Маркет</h3>
         <div id="market-list" class="grid"></div>
     </section>
-
     <section id="scr-cards" class="screen hidden">
-        <h3 align="center">🃏 Твоя Колекція</h3>
+        <h3 align="center">🃏 Твої Картки</h3>
         <div id="inventory" class="grid"></div>
     </section>
-
     <section id="scr-leader" class="screen hidden">
         <h3 align="center">🏆 Топ Гравців</h3>
-        <div id="leaderboard-list" style="padding: 10px;"></div>
+        <div id="leaderboard-list"></div>
     </section>
 </main>
 
@@ -88,129 +74,60 @@
 </nav>
 
 <script>
-    // ТВОЇ КЛЮЧІ З СКРІНШОТА
     const SB_URL = 'https://cpxgsklvgzxplqidqtzx.supabase.co';
-    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNweGdza2x2Z3p4cGxxaWRxdHp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNDY4ODYsImV4cCI6MjA5MjYyMjg4Nn0.rASq8yPzzjbXCOqsYON8Jx2Pq9PeRq2GbIYOc3UGFXM'; // ВСТАВ ПОВНИЙ КЛЮЧ СЮДИ51
+    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNweGdza2x2Z3p4cGxxaWRxdHp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNDY4ODYsImV4cCI6MjA5MjYyMjg4Nn0.rASq8yPzzjbXCOqsYON8Jx2Pq9PeRq2GbIYOc3UGFXM'; // <---51 Твій довгий ANON KEY
 
-    // Створення клієнта (window.supabase гарантує роботу)
-    const supabase = window.supabase.createClient(SB_URL, SB_KEY);
+    // Безпечне створення клієнта
+    const supabase = (window.supabase && window.supabase.createClient) 
+        ? window.supabase.createClient(SB_URL, SB_KEY) 
+        : null;
 
     let userId = localStorage.getItem('userId') || 'u' + Math.floor(Math.random()*1000000);
     localStorage.setItem('userId', userId);
-
-    let balance = 0, level = 1, xp = 0, myCards = {};
+    let balance = 0, level = 1, myCards = {};
 
     const items = [
-        { n: "Нічого", p: 33, e: "💨", c: "#94a3b8" },
-        { n: "Гоблін", p: 10, e: "👺", c: "#22c55e" },
-        { n: "Дворф", p: 9, e: "⛏️", c: "#3b82f6" },
-        { n: "Лицар", p: 6, e: "🛡️", c: "#94a3b8" },
-        { n: "Маг Світла", p: 5, e: "✨", c: "#fde047" },
-        { n: "Король", p: 4.5, e: "👑", c: "#f59e0b" },
-        { n: "Дракон", p: 2, e: "🐉", c: "#ef4444" },
-        { n: "Серце життя", p: 0.5, e: "❤️", c: "#ec4899" }
+        { n: "Гоблін", e: "👺", c: "#22c55e", p: 40 },
+        { n: "Лицар", e: "🛡️", c: "#94a3b8", p: 10 },
+        { n: "Дракон", e: "🐉", c: "#ef4444", p: 2 }
     ];
 
-    // ЗАВАНТАЖЕННЯ ДАНИХ
-    async function init() {
-        const { data: profile } = await supabase.from('profiles').select('*').eq('id', userId).single();
-        if (profile) { balance = profile.balance; level = profile.level; }
-        
-        const { data: cards } = await supabase.from('user_cards').select('*').eq('user_id', userId);
-        if (cards) cards.forEach(c => myCards[c.char_name] = c.quantity);
-        updateUI();
-    }
-
-    // КЛІКЕР
     document.getElementById('main-crystal').addEventListener('pointerdown', (e) => {
-        balance += level;
-        xp++;
-        if (xp >= 100 && level < 10) { level++; xp = 0; }
-        updateUI();
-        supabase.from('profiles').upsert({ id: userId, balance: balance, level: level });
-        
-        const f = document.createElement('div');
-        f.className = 'float-n'; f.innerText = `+${level}`;
-        f.style.left = e.clientX + 'px'; f.style.top = e.clientY + 'px';
-        document.body.appendChild(f);
-        setTimeout(() => f.remove(), 700);
+        balance += level; updateUI();
+        if (supabase) supabase.from('profiles').upsert({ id: userId, balance: balance, level: level });
+        const n = document.createElement('div');
+        n.className = 'float-n'; n.innerText = `+${level}`;
+        n.style.left = e.clientX + 'px'; n.style.top = e.clientY + 'px';
+        document.body.appendChild(n);
+        setTimeout(() => n.remove(), 700);
     });
 
-    // КЕЙСИ
-    function startRoll() {
+    async function startRoll() {
         if (balance < 100) return alert("Мало монет!");
-        balance -= 100; updateUI();
-        
-        const inner = document.getElementById('roulette-inner');
-        inner.style.transition = 'none'; inner.style.transform = 'translateX(0)'; inner.innerHTML = '';
-        
-        let pool = [];
-        for(let i=0; i<45; i++) {
-            let r = Math.random()*100, cur=0, winI = items;
-            for(let it of items){ cur+=it.p; if(r<=cur){winI=it; break;} }
-            pool.push(winI);
-            inner.innerHTML += `<div class="item-box" style="border-color:${winI.c}"><span>${winI.e}</span><br>${winI.n}</div>`;
-        }
-
-        const winResult = pool[38];
-        setTimeout(() => {
-            inner.style.transition = 'transform 4s cubic-bezier(0.15, 0, 0.15, 1)';
-            const move = (38 * 90) - (inner.parentElement.offsetWidth / 2) + 45;
-            inner.style.transform = `translateX(-${move}px)`;
-        }, 50);
-
-        setTimeout(async () => {
-            if(winResult.n !== "Нічого") {
-                myCards[winResult.n] = (myCards[winResult.n] || 0) + 1;
-                await supabase.from('user_cards').upsert({ user_id: userId, char_name: winResult.n, quantity: myCards[winResult.n] }, { onConflict: 'user_id, char_name' });
-            }
-            document.getElementById('roll-res').innerText = `ВИПАЛО: ${winResult.n}`;
-            updateUI();
-        }, 4100);
-    }
-
-    async function listToMarket(name) {
-        let price = prompt("Ціна продажу (1-99999):", "500");
-        if (!price || price < 1) return;
-        myCards[name]--;
-        await supabase.from('user_cards').upsert({ user_id: userId, char_name: name, quantity: myCards[name] });
-        await supabase.from('market').insert({ seller_id: userId, char_name: name, price: parseInt(price) });
+        balance -= 100;
+        let win = items[Math.floor(Math.random()*items.length)];
+        myCards[win.n] = (myCards[win.n] || 0) + 1;
+        document.getElementById('roll-res').innerText = `Випало: ${win.n} ${win.e}`;
         updateUI();
-    }
-
-    async function loadMarket() {
-        const { data } = await supabase.from('market').select('*');
-        const list = document.getElementById('market-list');
-        list.innerHTML = data.map(l => {
-            let info = items.find(i => i.n === l.char_name);
-            return `<div class="card"><div class="card-header" style="background:${info.c}">${l.char_name}</div><div style="font-size:30px; padding:10px">${info.e}</div><div>${l.price} 💰</div><button class="btn" onclick="buyLot(${l.id},${l.price},'${l.seller_id}','${l.char_name}')">КУПИТИ</button></div>`;
-        }).join('');
-    }
-
-    async function buyLot(id, p, sid, n) {
-        if (sid === userId) return alert("Ваш лот!");
-        if (balance < p) return alert("Мало монет!");
-        balance -= p;
-        const { error } = await supabase.from('market').delete().eq('id', id);
-        if (!error) {
-            myCards[n] = (myCards[n] || 0) + 1;
-            await supabase.from('user_cards').upsert({ user_id: userId, char_name: n, quantity: myCards[n] });
-            updateUI();
-        }
+        if (supabase) await supabase.from('user_cards').upsert({ user_id: userId, char_name: win.n, quantity: myCards[win.n] }, { onConflict: 'user_id, char_name' });
     }
 
     async function loadLeaderboard() {
+        if (!supabase) return;
         const { data } = await supabase.from('profiles').select('*').order('balance', { ascending: false }).limit(10);
-        document.getElementById('leaderboard-list').innerHTML = data.map((p, i) => `<div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #333"><span>${i+1}. ${p.id.slice(-5)}</span><span>${p.balance} 💰</span></div>`).join('');
+        document.getElementById('leaderboard-list').innerHTML = data.map((p, i) => `
+            <div class="leader-item">
+                <span>${i+1}. ${p.id === userId ? 'ТИ' : 'Гравець...'+p.id.slice(-4)}</span>
+                <span>${p.balance} 💰</span>
+            </div>`).join('');
     }
 
     function updateUI() {
         document.getElementById('balance').innerText = balance;
         document.getElementById('level').innerText = level;
-        const inv = document.getElementById('inventory');
-        inv.innerHTML = Object.keys(myCards).filter(n => myCards[n] > 0).map(n => {
+        document.getElementById('inventory').innerHTML = Object.keys(myCards).map(n => {
             let info = items.find(i => i.n === n);
-            return `<div class="card"><div class="card-header" style="background:${info.c}">${n}</div><div style="font-size:30px; padding:10px">${info.e}</div><div style="font-size:10px">К-сть: ${myCards[n]}</div><button class="btn" onclick="listToMarket('${n}')">ПРОДАТИ</button></div>`;
+            return `<div class="card"><div class="card-header" style="background:${info.c}">${n}</div><div style="font-size:30px; padding:10px">${info.e}</div><div style="font-size:10px">К-сть: ${myCards[n]}</div></div>`;
         }).join('');
     }
 
@@ -219,9 +136,18 @@
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('scr-' + id).classList.remove('hidden');
         btn.classList.add('active');
-        if (id === 'leader') loadLeaderboard(); if (id === 'market') loadMarket();
+        if (id === 'leader') loadLeaderboard();
     }
 
+    async function init() {
+        if (supabase) {
+            const { data: p } = await supabase.from('profiles').select('*').eq('id', userId).single();
+            if (p) { balance = p.balance; level = p.level; }
+            const { data: c } = await supabase.from('user_cards').select('*').eq('user_id', userId);
+            if (c) c.forEach(x => myCards[x.char_name] = x.quantity);
+            updateUI();
+        }
+    }
     init();
 </script>
 </body>
