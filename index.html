@@ -3,25 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Crystal Clicker Elite</title>
-    <!-- Резервне завантаження бібліотеки -->
-    <script src="https://jsdelivr.net"></script>
-    <script>
-        if (!window.supabase) {
-            console.log("Основне джерело Supabase не доступне, пробуємо резервне...");
-            var script = document.createElement('script');
-            script.src = "https://unpkg.com";
-            document.head.appendChild(script);
-        }
-    </script>
+    <title>Crystal Clicker PRO</title>
+    
+    <!-- Нове джерело бібліотеки, яке працює без VPN -->
+    <script src="https://unpkg.com"></script>
+
     <style>
         :root { --bg: #0b111a; --panel: #1a222d; --accent: #00d2ff; --gold: #ffc400; --red: #ff4d4d; }
-        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; user-select: none; }
+        body { background: var(--bg); color: #fff; font-family: sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; user-select: none; }
         header { padding: 10px; display: flex; justify-content: space-around; align-items: center; background: #161b22; border-bottom: 2px solid var(--accent); }
         .stat-val { font-size: 18px; font-weight: 900; color: var(--accent); }
         .save-btn { background: #238636; border: none; color: white; padding: 5px 10px; border-radius: 5px; font-size: 10px; cursor: pointer; }
         .screen { flex: 1; overflow-y: auto; padding-bottom: 80px; }
         .hidden { display: none !important; }
+        
         .click-container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; }
         #main-crystal { 
             width: 180px; height: 180px; background: linear-gradient(135deg, #00d2ff, #3a7bd5); 
@@ -29,21 +24,23 @@
             font-size: 50px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.05s;
         }
         #main-crystal:active { transform: scale(0.9); }
+        
         .xp-bar { width: 80%; height: 10px; background: #333; border-radius: 5px; margin-top: 10px; overflow: hidden; }
         #xp-fill { width: 0%; height: 100%; background: var(--gold); transition: width 0.3s; }
+        
         #roulette-container { width: 90%; height: 120px; background: #0d1117; border: 2px solid #30363d; margin: 20px auto; position: relative; overflow: hidden; border-radius: 10px; }
         #roulette-inner { display: flex; position: absolute; left: 50%; top: 10px; transition: transform 4s cubic-bezier(0.15, 0, 0.15, 1); }
         .roulette-item { min-width: 100px; height: 100px; background: #21262d; margin: 0 5px; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-bottom: 4px solid #333; }
         .roulette-pointer { position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; background: var(--red); z-index: 5; transform: translateX(-50%); box-shadow: 0 0 10px var(--red); }
+
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 15px; }
         .card { background: var(--panel); border-radius: 12px; border: 1px solid #30363d; text-align: center; padding-bottom: 10px; overflow: hidden; }
         .card-header { padding: 5px; font-size: 10px; font-weight: bold; color: #000; text-transform: uppercase; }
         .btn-action { background: var(--accent); border: none; border-radius: 5px; padding: 8px; font-size: 10px; font-weight: bold; cursor: pointer; width: 85%; margin-top: 5px; }
-        nav { position: fixed; bottom: 0; width: 100%; background: #161b22; height: 65px; display: flex; border-top: 1px solid #30363d; z-index: 100; }
+
+        nav { position: fixed; bottom: 0; width: 100%; background: #161b22; height: 65px; display: flex; border-top: 1px solid #30363d; }
         .nav-btn { flex: 1; border: none; background: none; color: #8b949e; font-size: 10px; font-weight: bold; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
         .nav-btn.active { color: var(--accent); }
-        .float-n { position: absolute; font-weight: 900; color: var(--accent); pointer-events: none; animation: floatUp 0.7s forwards; }
-        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-100px); } }
     </style>
 </head>
 <body>
@@ -54,7 +51,7 @@
     <button class="save-btn" onclick="manualSave()">💾 ЗБЕРЕГТИ</button>
 </header>
 
-<main style="flex:1;">
+<main style="flex:1; position:relative;">
     <section id="scr-game" class="screen click-container">
         <div id="main-crystal">💎</div>
         <div class="xp-bar"><div id="xp-fill"></div></div>
@@ -69,7 +66,6 @@
             <div id="roulette-inner"></div>
         </div>
         <div align="center"><button id="btn-open" class="btn-action" style="width:70%; height:50px; font-size:16px;" onclick="startRoll()">ВІДКРИТИ</button></div>
-        <p align="center" style="font-size:10px; color:#555">Відкрито: <span id="total-cases">0</span></p>
     </section>
 
     <section id="scr-market" class="screen hidden"><div id="market-list" class="grid"></div></section>
@@ -87,18 +83,18 @@
 
 <script>
     const SB_URL = 'https://cpxgsklvgzxplqidqtzx.supabase.co';
-    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNweGdza2x2Z3p4cGxxaWRxdHp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNDY4ODYsImV4cCI6MjA5MjYyMjg4Nn0.rASq8yPzzjbXCOqsYON8Jx2Pq9PeRq2GbIYOc3UGFXM';
+    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNweGdza2x2Z3p4cGxxaWRxdHp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNDY4ODYsImV4cCI6MjA5MjYyMjg4Nn0.rASq8yPzzjbXCOqsYON8Jx2Pq9PeRq2GbIYOc3UGFXM'; // <--- ДОВГИЙ КЛЮЧ СЮДИ
 
+    // Безпечна ініціалізація
     let supabase;
-    // Чекаємо завантаження бібліотеки
-    window.addEventListener('load', () => {
-        if (window.supabase) {
-            supabase = window.supabase.createClient(SB_URL, SB_KEY);
-            init();
-        } else {
-            alert("Помилка підключення до сервера! Спробуйте VPN або інший браузер.");
-        }
-    });
+    try {
+        supabase = window.supabase.createClient(SB_URL, SB_KEY);
+    } catch (e) {
+        console.error("Не вдалося ініціалізувати базу!");
+    }
+
+    let userId = localStorage.getItem('userId') || 'u' + Math.floor(Math.random()*1000000);
+    localStorage.setItem('userId', userId);
 
     let balance = 0, level = 1, xp = 0, casesOpened = 0, myCards = {};
 
@@ -116,6 +112,7 @@
     ];
 
     async function init() {
+        if (!supabase) return;
         const { data: p } = await supabase.from('profiles').select('*').eq('id', userId).single();
         if (p) { balance = p.balance; level = p.level || 1; xp = p.xp || 0; casesOpened = p.cases_opened || 0; }
         const { data: c } = await supabase.from('user_cards').select('*').eq('user_id', userId);
@@ -132,47 +129,48 @@
 
     async function manualSave() {
         if (supabase) await supabase.from('profiles').upsert({ id: userId, balance, level, xp, cases_opened: casesOpened });
+        alert("Прогрес збережено!");
     }
 
     document.getElementById('main-crystal').addEventListener('pointerdown', (e) => {
         balance += level;
         xp += 2;
         let xpNeeded = level * 150;
-        if (xp >= xpNeeded && level < 10) { level++; xp = 0; alert("Level UP!"); }
+        if (xp >= xpNeeded && level < 10) { level++; xp = 0; }
         updateUI();
-        const n = document.createElement('div');
-        n.className = 'float-n'; n.innerText = `+${level}`;
-        n.style.left = e.clientX + 'px'; n.style.top = e.clientY + 'px';
-        document.body.appendChild(n);
-        setTimeout(() => n.remove(), 700);
+        // Автозбереження кожні 10 кліків
+        if (xp % 20 === 0) manualSave();
     });
 
     function startRoll() {
         let price = getCasePrice();
-        if (balance < price) return alert("Потрібно " + price);
+        if (balance < price) return alert("Недостатньо монет!");
         balance -= price; casesOpened++; updateUI();
+
         const inner = document.getElementById('roulette-inner');
         inner.style.transition = 'none'; inner.style.transform = 'translateX(0)'; inner.innerHTML = '';
+        
         let pool = [];
         for(let i=0; i<60; i++) {
-            let r = Math.random()*100, cur=0, winI = items[0];
+            let r = Math.random()*100, cur=0, winI = items;
             for(let it of items){ cur+=it.p; if(r<=cur){winI=it; break;} }
             pool.push(winI);
             inner.innerHTML += `<div class="roulette-item" style="border-color:${winI.c}"><span>${winI.e}</span><small>${winI.n}</small></div>`;
         }
-        const result = pool[50];
+        const win = pool[50];
         setTimeout(() => {
             inner.style.transition = 'transform 4s cubic-bezier(0.15, 0, 0.15, 1)';
             const move = (50 * 110) - (inner.parentElement.offsetWidth / 2) + 55;
             inner.style.transform = `translateX(-${move}px)`;
         }, 50);
+
         setTimeout(async () => {
-            if(result.n === "75 монет") balance += 75;
-            else if(result.n !== "Нічого") {
-                myCards[result.n] = (myCards[result.n] || 0) + 1;
-                await supabase.from('user_cards').upsert({ user_id: userId, char_name: result.n, quantity: myCards[result.n] }, { onConflict: 'user_id, char_name' });
+            if(win.n === "75 монет") balance += 75;
+            else if(win.n !== "Нічого") {
+                myCards[win.n] = (myCards[win.n] || 0) + 1;
+                if (supabase) await supabase.from('user_cards').upsert({ user_id: userId, char_name: win.n, quantity: myCards[win.n] }, { onConflict: 'user_id, char_name' });
             }
-            updateUI(); manualSave();
+            updateUI();
         }, 4100);
     }
 
@@ -184,19 +182,12 @@
         let xpNeeded = level * 150;
         document.getElementById('xp-fill').style.width = (xp / xpNeeded * 100) + "%";
         document.getElementById('xp-text').innerText = `XP: ${xp}/${xpNeeded}`;
-        document.getElementById('inventory').innerHTML = Object.keys(myCards).filter(n => myCards[n] > 0).map(n => {
+        
+        const inv = document.getElementById('inventory');
+        inv.innerHTML = Object.keys(myCards).filter(n => myCards[n] > 0).map(n => {
             let info = items.find(i => i.n === n);
-            return `<div class="card"><div class="card-header" style="background:${info.c}">${n}</div><div style="font-size:30px; padding:10px">${info.e}</div><div>${myCards[n]}</div><button class="btn-action" onclick="listToMarket('${n}')">ПРОДАТИ</button></div>`;
+            return `<div class="card"><div class="card-header" style="background:${info.c}">${n}</div><div style="font-size:30px; padding:10px">${info.e}</div><div>К-сть: ${myCards[n]}</div><button class="btn-action" onclick="listToMarket('${n}')">ПРОДАТИ</button></div>`;
         }).join('');
-    }
-
-    async function listToMarket(name) {
-        let price = prompt("Ціна продажу:", "500");
-        if (!price || price < 1) return;
-        myCards[name]--;
-        await supabase.from('user_cards').upsert({ user_id: userId, char_name: name, quantity: myCards[name] });
-        await supabase.from('market').insert({ seller_id: userId, char_name: name, price: parseInt(price) });
-        updateUI();
     }
 
     async function show(id, btn) {
@@ -204,18 +195,20 @@
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('scr-' + id).classList.remove('hidden');
         btn.classList.add('active');
-        if (id === 'leader') {
+        if (id === 'leader' && supabase) {
             const { data } = await supabase.from('profiles').select('*').order('balance', { ascending: false }).limit(10);
             document.getElementById('leader-list').innerHTML = data.map((p, i) => `<div style="display:flex; justify-content:space-between; padding:12px; background:#1a222d; margin:5px; border-radius:5px"><span>${i+1}. ${p.id.slice(-5)}</span><span>${p.balance} 💰</span></div>`).join('');
         }
-        if (id === 'market') {
+        if (id === 'market' && supabase) {
             const { data } = await supabase.from('market').select('*');
             document.getElementById('market-list').innerHTML = data.map(l => {
                 let info = items.find(i => i.n === l.char_name);
-                return `<div class="card"><div class="card-header" style="background:${info.c}">${l.char_name}</div><div style="font-size:30px">${info.e}</div><div>${l.price}</div><button class="btn-action" onclick="buyLot(${l.id},${l.price},'${l.seller_id}','${l.char_name}')">КУПИТИ</button></div>`;
+                return `<div class="card"><div class="card-header" style="background:${info.c}">${l.char_name}</div><div style="font-size:30px">${info.e}</div><div>Ціна: ${l.price}</div><button class="btn-action" onclick="buyLot(${l.id},${l.price},'${l.seller_id}','${l.char_name}')">КУПИТИ</button></div>`;
             }).join('');
         }
     }
+
+    init();
 </script>
 </body>
 </html>
